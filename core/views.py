@@ -12,8 +12,11 @@ class PhoneOTPRequestView(APIView):
     def post(self, request):
         serializer = PhoneOTPRequestSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            serializer.save()
-            return Response({"detail": "Code OTP envoyé avec succès."})
+            otp = serializer.save()
+            return Response({
+                "detail": "Code OTP envoyé avec succès.",
+                "otp": otp
+            })
         return Response(serializer.errors, status=400)
 
 class PhoneOTPVerifyView(APIView):
