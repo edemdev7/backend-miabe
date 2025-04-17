@@ -7,6 +7,13 @@ class UserCreateSerializer(BaseUserCreateSerializer):
         model = CustomUser
         fields = ('id', 'username', 'email', 'password', 'type', 'location')
 
+    def create(self, validated_data):
+        user = CustomUser.objects.create_user(**validated_data)
+        if user.type == 'particulier':
+            user.is_active = False
+            user.save()
+        return user
+
 class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         model = CustomUser
