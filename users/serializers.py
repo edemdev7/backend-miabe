@@ -6,7 +6,7 @@ from rest_framework import serializers
 class UserCreateSerializer(BaseUserCreateSerializer):
     class Meta(BaseUserCreateSerializer.Meta):
         model = CustomUser
-        fields = ('id', 'username', 'email', 'password', 'type', 'location')
+        fields = ('id', 'username', 'email', 'type', 'location', 'points', 'is_phone_verified', 'is_verified_by_admin', 'rejected_reason')
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
@@ -30,3 +30,10 @@ class VerificationDocumentUploadSerializer(serializers.ModelSerializer):
         if not user.is_phone_verified:
             raise serializers.ValidationError("Votre téléphone n'est pas encore vérifié.")
         return data
+    
+class UserVerificationAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'phone', 'type', 'is_active',
+                  'is_phone_verified', 'is_verified_by_admin',
+                  'cip_document', 'residence_proof', 'rejected_reason']

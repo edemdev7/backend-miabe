@@ -20,6 +20,7 @@ class CustomUser(AbstractUser):
     is_phone_verified = models.BooleanField(default=False)
     cip_document = models.ImageField(upload_to='verifications/cip/', null=True, blank=True)
     residence_proof = models.ImageField(upload_to='verifications/residence/', null=True, blank=True)
+    rejected_reason = models.TextField(null=True, blank=True)
     is_verified_by_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
