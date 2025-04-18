@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, serializers
 from .models import WasteDeclaration
 from .serializers import WasteDeclarationSerializer
 from users.models import CustomUser
@@ -17,6 +17,12 @@ class WasteDeclarationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
+        user= self.request.user
+        if user.type != 'particulier':
+            raise serializers.ValidationError("Cette opération est réservée aux particuliers.")
+        if not user.is_verified_by_admin:
+            raise serializers.ValidationError("Votre compte n'est pas encore vérifié par l'administration.")
+        
         declaration = serializer.save(user=self.request.user)
         # Calcul des points
         points = int(declaration.weight * POINTS_PER_KG.get(declaration.category, 1))
