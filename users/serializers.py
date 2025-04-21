@@ -6,7 +6,8 @@ from rest_framework import serializers
 class UserCreateSerializer(BaseUserCreateSerializer):
     class Meta(BaseUserCreateSerializer.Meta):
         model = CustomUser
-        fields = ('id', 'username', 'email', 'type', 'location', 'points', 'is_phone_verified', 'is_verified_by_admin', 'rejected_reason')
+        fields = ('id', 'username', 'email', 'password', 'type', 'location', 'points', 'is_phone_verified', 'is_verified_by_admin', 'rejected_reason')
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
