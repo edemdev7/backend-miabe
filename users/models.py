@@ -55,3 +55,31 @@ class CustomUser(AbstractUser):
         else:
             return "en attente"
 
+class ProfessionalVerification(models.Model):
+    USER_TYPES = [
+        ('collecteur', 'Collecteur'),
+        ('recycleur', 'Recycleur'),
+    ]
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, choices=USER_TYPES)
+
+    entreprise = models.CharField(max_length=255)
+    ifu = models.CharField(max_length=100)
+    rccm = models.CharField(max_length=100)
+    email_entreprise = models.EmailField()
+    adresse_entreprise = models.CharField(max_length=255)
+    type_dechets = models.CharField(max_length=255)
+    nbre_equipe = models.PositiveIntegerField()
+    preuve_impot = models.FileField(upload_to="verifications/impots/")
+
+    # Spécifique aux collecteurs
+    zones_intervention = models.JSONField(blank=True, null=True)
+
+    # Admin
+    is_validated = models.BooleanField(default=False)
+    rejected_reason = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.entreprise} ({self.user.username})"

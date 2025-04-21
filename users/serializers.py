@@ -1,6 +1,6 @@
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from .models import CustomUser
+from .models import CustomUser, ProfessionalVerification
 from rest_framework import serializers
 
 class UserCreateSerializer(BaseUserCreateSerializer):
@@ -62,3 +62,18 @@ class UserVerificationAdminSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'phone', 'type', 'is_active',
                   'is_phone_verified', 'is_verified_by_admin',
                   'cip_document', 'residence_proof', 'rejected_reason']
+
+class ProfessionalVerificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfessionalVerification
+        exclude = ['is_validated', 'rejected_reason', 'submitted_at', 'user']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if user.type not in ['collecteur', 'recycleur']:
+            raise serializers.ValidationError("Ce formulaire est réservé aux collecteurs et recycleurs.")
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        return ProfessionalVerification.objects.create(user=user, type=user.type, **validated_data)

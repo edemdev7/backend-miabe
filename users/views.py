@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, status
-from .serializers import VerificationDocumentUploadSerializer
+from .serializers import ProfessionalVerificationSerializer, VerificationDocumentUploadSerializer
 from .models import CustomUser
 from .serializers import UserVerificationAdminSerializer
 
@@ -63,3 +63,18 @@ class ValidateUserView(APIView):
 
         user.save()
         return Response({"detail": "Compte mis à jour avec succès."})
+    
+class SubmitProfessionalVerificationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        if hasattr(user, 'professionalverification'):
+            return Response({"detail": "Demande déjà soumise."}, status=400)
+
+        serializer = ProfessionalVerificationSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Demande soumise avec succès. En attente de validation."})
+        return Response(serializer.errors, status=400)
