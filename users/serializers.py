@@ -16,9 +16,33 @@ class UserCreateSerializer(BaseUserCreateSerializer):
         return user
 
 class UserSerializer(BaseUserSerializer):
+    phone_verified = serializers.SerializerMethodField()
+    documents_uploaded = serializers.SerializerMethodField()
+    verification_status = serializers.SerializerMethodField()
+
     class Meta(BaseUserSerializer.Meta):
         model = CustomUser
-        fields = ('id', 'username', 'email', 'type', 'location', 'points')
+        fields = ('id', 'username', 'email', 'type', 'location', 'points',
+                  'is_active', 'phone_verified', 'documents_uploaded',
+                  'verification_status', 'rejected_reason')
+
+    def get_phone_verified(self, obj):
+        return obj.is_phone_verified
+
+    def get_documents_uploaded(self, obj):
+        return bool(obj.cip_document and obj.residence_proof)
+
+    def get_verification_status(self, obj):
+        if not obj.is_phone_verified:
+            return "non vérifié"
+        elif not (obj.cip_document and obj.residence_proof):
+            return "en attente"
+        elif obj.is_verified_by_admin:
+            return "validé"
+        elif obj.rejected_reason:
+            return "rejeté"
+        return "en attente"
+
 
 class VerificationDocumentUploadSerializer(serializers.ModelSerializer):
     class Meta:

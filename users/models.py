@@ -28,3 +28,20 @@ class CustomUser(AbstractUser):
 
     def can_submit_declaration(self):
         return self.type == 'particulier' and self.is_active and self.is_phone_verified and self.is_verified_by_admin
+    
+    @property
+    def documents_uploaded(self):
+        return bool(self.cip_document and self.residence_proof)
+    @property
+    def verification_status(self):
+        if not self.is_phone_verified:
+            return "non vérifié"
+        elif not self.documents_uploaded:
+            return "en attente"
+        elif self.is_verified_by_admin:
+            return "validé"
+        elif self.rejected_reason:
+            return "rejeté"
+        else:
+            return "en attente"
+

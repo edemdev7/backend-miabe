@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-v8!7$xjkhx^(k_p-70mor6&*%t0=ji336-d*l=0i7y0k2la82t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://v0-ecocollect-dashboard-3morhb8ua-edem-devs-projects.vercel.app', 'localhost','127.0.0.1','127.0.0.1:8000']
 AUTH_USER_MODEL = 'users.CustomUser'
 DJOSER = {
     "USER_ID_FIELD": "id",
@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'missions',
     'recyclers',
     'core',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -75,7 +76,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+CORS_ALLOWED_ORIGINS = [
+    "https://v0-ecocollect-dashboard-3morhb8ua-edem-devs-projects.vercel.app",
+]
+CORS_ALLOW_ALL_ORIGINS = True 
+
 
 ROOT_URLCONF = 'eco_collect.urls'
 
