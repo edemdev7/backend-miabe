@@ -12,7 +12,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
         if user.type == 'particulier':
-            user.is_active = False
+            user.is_active = True
             user.save()
         return user
 

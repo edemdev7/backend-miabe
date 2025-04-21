@@ -17,6 +17,14 @@ class WasteDeclaration(models.Model):
     location = models.CharField(max_length=255)
     status = models.CharField(max_length=20, default='en attente')
     created_at = models.DateTimeField(auto_now_add=True)
+    collector = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='collected_declarations',
+        limit_choices_to={'type': 'collecteur'}
+    )
 
     def __str__(self):
         return f"{self.category} - {self.weight}kg par {self.user.username}"

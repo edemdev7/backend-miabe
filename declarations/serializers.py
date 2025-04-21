@@ -9,4 +9,5 @@ class WasteDeclarationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'photo': {'required': False},
             'location': {'required': True},
+            'collector': {'required': False},
         }

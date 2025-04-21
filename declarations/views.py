@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, serializers
+from rest_framework.decorators import action
 from .models import WasteDeclaration
 from .serializers import WasteDeclarationSerializer
 from users.models import CustomUser
@@ -33,4 +34,21 @@ class WasteDeclarationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Retourne uniquement les déclarations de l'utilisateur connecté
-        return WasteDeclaration.objects.filter(user=self.request.user)
+        user = self.request.user
+        if user.type == 'admin':
+            return WasteDeclaration.objects.all()
+        
+        return WasteDeclaration.objects.filter(user=user)
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def assign_collector(self, request, pk=None):
+        declaration = self.get_object()
+        collector_id = request.data.get('collector_id')
+        try:
+            collector = CustomUser.objects.get(id=collector_id, type='collecteur', location=declaration.location)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'Aucun collecteur trouvé dans cette zone.'}, status=400)
+        declaration.collector = collector
+        declaration.status = 'attribué'
+        declaration.save()
+        return Response({'detail': 'Collecteur attribué avec succès.'})
