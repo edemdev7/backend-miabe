@@ -79,7 +79,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 CORS_ALLOWED_ORIGINS = [
-    "https://v0-ecocollect-dashboard-3morhb8ua-edem-devs-projects.vercel.app",
+    "https://v0-ecocollect-dashboard-3morhb8ua-edem-devs-projects.vercel.app","http://localhost:8081"
 ]
 CORS_ALLOW_ALL_ORIGINS = True 
 
