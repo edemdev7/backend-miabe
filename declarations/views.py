@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from .models import WasteDeclaration
 from .serializers import WasteDeclarationSerializer
 from users.models import CustomUser
+from rest_framework.response import Response
+
 
 POINTS_PER_KG = {
     'plastique': 5,

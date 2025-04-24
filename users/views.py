@@ -2,9 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, status
-from .serializers import ProfessionalVerificationSerializer, VerificationDocumentUploadSerializer
+from .serializers import ProfessionalVerificationSerializer, VerificationDocumentUploadSerializer,UserVerificationAdminSerializer,CollectorSerializer
 from .models import CustomUser, ProfessionalVerification
-from .serializers import UserVerificationAdminSerializer
 
 class UploadVerificationDocumentsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -35,7 +34,7 @@ class UserVerificationListView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        return CustomUser.objects.filter(type='particulier')
+        return CustomUser.objects.all().exclude(type='admin')
 
 # Valider ou refuser un utilisateur
 class ValidateUserView(APIView):
@@ -109,3 +108,16 @@ class AdminValidateProfessionalView(APIView):
 
         pv.save()
         return Response({"detail": "Statut mis à jour avec succès"})
+
+class CollectorListView(generics.ListAPIView):
+    serializer_class = CollectorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        location = self.request.query_params.get('location', None)
+        queryset = CustomUser.objects.filter(type='collecteur')
+        
+        if location:
+            queryset = queryset.filter(location=location)
+            
+        return queryset

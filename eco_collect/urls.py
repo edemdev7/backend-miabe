@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/', include('declarations.urls')),
     path('auth/', include('core.urls')),
     path('auth/', include('users.urls')),
+    path('api/', include('users.urls')),
     path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-yaml'),
 
 ]

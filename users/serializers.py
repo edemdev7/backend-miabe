@@ -77,3 +77,9 @@ class ProfessionalVerificationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         return ProfessionalVerification.objects.create(user=user, type=user.type, **validated_data)
+
+class CollectorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'phone', 'location', 'is_active']
+        read_only_fields = fields
