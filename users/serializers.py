@@ -20,12 +20,17 @@ class UserSerializer(BaseUserSerializer):
     phone_verified = serializers.SerializerMethodField()
     documents_uploaded = serializers.SerializerMethodField()
     verification_status = serializers.SerializerMethodField()
+    pro_verification_submitted = serializers.SerializerMethodField()
+    pro_verification_status = serializers.SerializerMethodField()
+
 
     class Meta(BaseUserSerializer.Meta):
         model = CustomUser
         fields = ('id', 'username', 'email', 'type', 'location', 'points',
                   'is_active', 'phone_verified', 'documents_uploaded',
-                  'verification_status', 'rejected_reason')
+                  'verification_status', 'rejected_reason',
+                  'pro_verification_submitted', 'pro_verification_status')
+
 
     def get_phone_verified(self, obj):
         return obj.is_phone_verified
@@ -43,6 +48,29 @@ class UserSerializer(BaseUserSerializer):
         elif obj.rejected_reason:
             return "rejeté"
         return "en attente"
+    def get_pro_verification_submitted(self, obj):
+        if obj.type not in ['collecteur', 'recycleur']:
+            return None
+        try:
+            return bool(obj.professionalverification)
+        except ProfessionalVerification.DoesNotExist:
+            return False
+    
+    def get_pro_verification_status(self, obj):
+        if obj.type not in ['collecteur', 'recycleur']:
+            return None
+        
+        try:
+            pro_verif = obj.professionalverification
+        except ProfessionalVerification.DoesNotExist:
+            return "non soumis"
+            
+        if pro_verif.is_validated:
+            return "validé"
+        elif pro_verif.rejected_reason:
+            return "rejeté"
+        else:
+            return "en attente"
 
 
 class VerificationDocumentUploadSerializer(serializers.ModelSerializer):
