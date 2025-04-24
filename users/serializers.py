@@ -104,6 +104,10 @@ class ProfessionalVerificationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
+        # Supprimer le type des données validées s'il existe déjà
+        if 'type' in validated_data:
+            validated_data.pop('type')
+        # Création avec le type de l'utilisateur
         return ProfessionalVerification.objects.create(user=user, type=user.type, **validated_data)
 
 class CollectorSerializer(serializers.ModelSerializer):
