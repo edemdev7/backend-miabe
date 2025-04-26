@@ -16,12 +16,32 @@ class UserCreateSerializer(BaseUserCreateSerializer):
             user.save()
         return user
 
+class ProfessionalVerificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfessionalVerification
+        exclude = ['is_validated', 'rejected_reason', 'submitted_at', 'user']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if user.type not in ['collecteur', 'recycleur']:
+            raise serializers.ValidationError("Ce formulaire est réservé aux collecteurs et recycleurs.")
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        # Supprimer le type des données validées s'il existe déjà
+        if 'type' in validated_data:
+            validated_data.pop('type')
+        # Création avec le type de l'utilisateur
+        return ProfessionalVerification.objects.create(user=user, type=user.type, **validated_data)
+
 class UserSerializer(BaseUserSerializer):
     phone_verified = serializers.SerializerMethodField()
     documents_uploaded = serializers.SerializerMethodField()
     verification_status = serializers.SerializerMethodField()
     pro_verification_submitted = serializers.SerializerMethodField()
     pro_verification_status = serializers.SerializerMethodField()
+    professional_verification = ProfessionalVerificationSerializer(read_only=True,source='professionalverification')
 
 
     class Meta(BaseUserSerializer.Meta):
@@ -29,7 +49,9 @@ class UserSerializer(BaseUserSerializer):
         fields = ('id', 'username', 'email', 'type', 'location', 'points',
                   'is_active', 'phone_verified', 'documents_uploaded',
                   'verification_status', 'rejected_reason',
-                  'pro_verification_submitted', 'pro_verification_status')
+                  'pro_verification_submitted', 'pro_verification_status',
+                  'professional_verification') # Added professional_verification here
+        read_only_fields = BaseUserSerializer.Meta.read_only_fields + ('professional_verification',)
 
 
     def get_phone_verified(self, obj):
@@ -52,19 +74,21 @@ class UserSerializer(BaseUserSerializer):
         if obj.type not in ['collecteur', 'recycleur']:
             return None
         try:
-            return bool(obj.professionalverification)
-        except ProfessionalVerification.DoesNotExist:
+            # Utilise hasattr pour une vérification plus sûre sans exception directe
+            return hasattr(obj, 'professionalverification') and obj.professionalverification is not None
+        except ProfessionalVerification.DoesNotExist: # Garde pour robustesse
             return False
-    
+
+
     def get_pro_verification_status(self, obj):
         if obj.type not in ['collecteur', 'recycleur']:
             return None
-        
+
         try:
             pro_verif = obj.professionalverification
         except ProfessionalVerification.DoesNotExist:
             return "non soumis"
-            
+
         if pro_verif.is_validated:
             return "validé"
         elif pro_verif.rejected_reason:
@@ -83,32 +107,49 @@ class VerificationDocumentUploadSerializer(serializers.ModelSerializer):
         if not user.is_phone_verified:
             raise serializers.ValidationError("Votre téléphone n'est pas encore vérifié.")
         return data
-    
+
 class UserVerificationAdminSerializer(serializers.ModelSerializer):
+    # Ajoute le serializer imbriqué pour les données professionnelles
+    professional_verification = ProfessionalVerificationSerializer(read_only=True, source='professionalverification')
+    # Ajoute un champ pour le statut de la vérification pro
+    pro_verification_status = serializers.SerializerMethodField()
+    pro_verification_submitted = serializers.SerializerMethodField() 
+
+
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'phone', 'type', 'is_active',
-                  'is_phone_verified', 'is_verified_by_admin',
-                  'cip_document', 'residence_proof', 'rejected_reason']
+                  'is_phone_verified', 'is_verified_by_admin', # Pour les particuliers
+                  'cip_document', 'residence_proof', 'rejected_reason', # Pour les particuliers
+                  'professional_verification', # Pour collecteurs/recycleurs
+                  'pro_verification_status','pro_verification_submitted'] # Pour collecteurs/recycleurs
+        read_only_fields = ['id', 'username', 'email', 'phone', 'type',
+                            'is_phone_verified', 'cip_document', 'residence_proof',
+                            'professional_verification'] # Marque les champs imbriqués comme read_only
+    def get_pro_verification_submitted(self, obj):
+        if obj.type not in ['collecteur', 'recycleur']:
+            return None
+        try:
+            # Utilise hasattr pour une vérification plus sûre sans exception directe
+            return hasattr(obj, 'professionalverification') and obj.professionalverification is not None
+        except ProfessionalVerification.DoesNotExist: # Garde pour robustesse
+            return False
 
-class ProfessionalVerificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProfessionalVerification
-        exclude = ['is_validated', 'rejected_reason', 'submitted_at', 'user']
+    def get_pro_verification_status(self, obj):
+        # Réutilise la logique de UserSerializer si possible, ou la réimplémente ici
+        if obj.type not in ['collecteur', 'recycleur']:
+            return None
+        try:
+            pro_verif = obj.professionalverification
+        except ProfessionalVerification.DoesNotExist:
+            return "non soumis"
+        if pro_verif.is_validated:
+            return "validé"
+        elif pro_verif.rejected_reason:
+            return "rejeté"
+        else:
+            return "en attente"
 
-    def validate(self, data):
-        user = self.context['request'].user
-        if user.type not in ['collecteur', 'recycleur']:
-            raise serializers.ValidationError("Ce formulaire est réservé aux collecteurs et recycleurs.")
-        return data
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        # Supprimer le type des données validées s'il existe déjà
-        if 'type' in validated_data:
-            validated_data.pop('type')
-        # Création avec le type de l'utilisateur
-        return ProfessionalVerification.objects.create(user=user, type=user.type, **validated_data)
 
 class CollectorSerializer(serializers.ModelSerializer):
     class Meta:
