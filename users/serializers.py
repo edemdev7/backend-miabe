@@ -1,6 +1,6 @@
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from .models import CustomUser, ProfessionalVerification
+from .models import CollectorSchedule, CustomUser, ProfessionalVerification
 from rest_framework import serializers
 
 class UserCreateSerializer(BaseUserCreateSerializer):
@@ -156,3 +156,40 @@ class CollectorSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'phone', 'location', 'is_active']
         read_only_fields = fields
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'phone', 'location', 'location_gps']
+        extra_kwargs = {
+            'username': {'required': False},
+            'phone': {'required': False},
+            'location': {'required': False},
+            'location_gps': {'required': False}
+        }
+    
+    def update(self, instance, validated_data):
+        # Vérifie si le numéro de téléphone a changé
+        old_phone = instance.phone
+        new_phone = validated_data.get('phone')
+        
+        user = super().update(instance, validated_data)
+        
+        # Si le numéro de téléphone a changé, réinitialiser la vérification
+        if new_phone and new_phone != old_phone:
+            user.is_phone_verified = False
+            user.save()
+            
+        return user
+    
+class CollectorScheduleSerializer(serializers.ModelSerializer):
+    day_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CollectorSchedule
+        fields = ['id', 'zone', 'day_of_week', 'day_name', 'start_time', 'end_time']
+        read_only_fields = ['id']
+    
+    def get_day_name(self, obj):
+        days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+        return days[obj.day_of_week]

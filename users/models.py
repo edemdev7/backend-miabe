@@ -24,6 +24,7 @@ class CustomUser(AbstractUser):
     phone = models.CharField(max_length=20, blank=True, null=True)
     type = models.CharField(max_length=20, choices=USER_TYPES, default='particulier')
     location = models.CharField(max_length=255, blank=True, null=True)
+    location_gps = models.CharField(max_length=100, blank=True, null=True) 
     points = models.IntegerField(default=0)
 
     # Vérification du particulier
@@ -83,3 +84,23 @@ class ProfessionalVerification(models.Model):
 
     def __str__(self):
         return f"{self.entreprise} ({self.user.username})"
+
+class CollectorSchedule(models.Model):
+    collector = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='schedules',
+                                 limit_choices_to={'type': 'collecteur'})
+    zone = models.CharField(max_length=255)
+    day_of_week = models.IntegerField(choices=[
+        (0, 'Lundi'),
+        (1, 'Mardi'),
+        (2, 'Mercredi'),
+        (3, 'Jeudi'),
+        (4, 'Vendredi'),
+        (5, 'Samedi'),
+        (6, 'Dimanche')
+    ])
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    
+    class Meta:
+        unique_together = ['collector', 'zone', 'day_of_week']
+        ordering = ['day_of_week', 'start_time']

@@ -2,8 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, status
-from .serializers import ProfessionalVerificationSerializer, VerificationDocumentUploadSerializer,UserVerificationAdminSerializer,CollectorSerializer
-from .models import CustomUser, ProfessionalVerification
+from .serializers import CollectorScheduleSerializer, ProfessionalVerificationSerializer, UserProfileUpdateSerializer, VerificationDocumentUploadSerializer,UserVerificationAdminSerializer,CollectorSerializer
+from .models import CollectorSchedule, CustomUser, ProfessionalVerification
+from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
+from rest_framework import viewsets
 
 class UploadVerificationDocumentsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -121,3 +124,24 @@ class CollectorListView(generics.ListAPIView):
             queryset = queryset.filter(location=location)
             
         return queryset
+    
+class UserProfileUpdateView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserProfileUpdateSerializer
+    
+    def get_object(self):
+        return self.request.user
+        
+# Pour gérer les horaires de collecteurs
+class CollectorScheduleViewSet(viewsets.ModelViewSet):
+    serializer_class = CollectorScheduleSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user = self.request.user
+        if user.type != 'collecteur':
+            return CollectorSchedule.objects.none()
+        return CollectorSchedule.objects.filter(collector=user)
+    
+    def perform_create(self, serializer):
+        serializer.save(collector=self.request.user)
