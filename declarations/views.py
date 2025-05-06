@@ -4,6 +4,11 @@ from .models import WasteDeclaration
 from .serializers import WasteDeclarationSerializer
 from users.models import CustomUser
 from rest_framework.response import Response
+from django.db.models import Q
+from django.utils import timezone
+import datetime
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, DateFilter, CharFilter
 
 
 POINTS_PER_KG = {
@@ -54,3 +59,12 @@ class WasteDeclarationViewSet(viewsets.ModelViewSet):
         declaration.status = 'attribué'
         declaration.save()
         return Response({'detail': 'Collecteur attribué avec succès.'})
+
+class MissionFilter(FilterSet):
+    date_min = DateFilter(field_name="assigned_at", lookup_expr='gte')
+    date_max = DateFilter(field_name="assigned_at", lookup_expr='lte')
+    location = CharFilter(field_name="location", lookup_expr='icontains')
+    
+    class Meta:
+        model = WasteDeclaration
+        fields = ['status', 'location', 'date_min', 'date_max']

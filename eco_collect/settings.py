@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'recyclers',
     'core',
     'corsheaders',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
