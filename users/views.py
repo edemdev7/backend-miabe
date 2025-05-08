@@ -145,3 +145,17 @@ class CollectorScheduleViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(collector=self.request.user)
+
+class CollectorAvailabilityView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.type != 'collecteur':
+            return Response({'error': 'Action réservée aux collecteurs.'}, status=403)
+        is_available = request.data.get('is_available')
+        if is_available is None:
+            return Response({'error': 'Champ is_available requis.'}, status=400)
+        user.is_available = bool(is_available)
+        user.save()
+        return Response({'detail': 'Disponibilité mise à jour.', 'is_available': user.is_available})

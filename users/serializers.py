@@ -50,7 +50,7 @@ class UserSerializer(BaseUserSerializer):
                   'is_active', 'phone_verified', 'documents_uploaded',
                   'verification_status', 'rejected_reason',
                   'pro_verification_submitted', 'pro_verification_status',
-                  'professional_verification') # Added professional_verification here
+                  'professional_verification', 'is_available',) # Added professional_verification here
         read_only_fields = BaseUserSerializer.Meta.read_only_fields + ('professional_verification',)
 
 

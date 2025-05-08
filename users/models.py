@@ -26,7 +26,7 @@ class CustomUser(AbstractUser):
     location = models.CharField(max_length=255, blank=True, null=True)
     location_gps = models.CharField(max_length=100, blank=True, null=True) 
     points = models.IntegerField(default=0)
-
+    is_available = models.BooleanField(default=True)
     # Vérification du particulier
     is_phone_verified = models.BooleanField(default=False)
     cip_document = models.ImageField(upload_to='verifications/cip/', null=True, blank=True)
