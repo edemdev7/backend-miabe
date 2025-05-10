@@ -51,12 +51,17 @@ class WasteDeclarationViewSet(viewsets.ModelViewSet):
         user.save()
 
     def get_queryset(self):
-        # Retourne uniquement les déclarations de l'utilisateur connecté
         user = self.request.user
         if user.type == 'admin':
             return WasteDeclaration.objects.all()
-        
-        return WasteDeclaration.objects.filter(user=user)
+        elif user.type == 'collecteur':
+            # Retourne les déclarations où le collecteur est assigné
+            return WasteDeclaration.objects.filter(
+                Q(user=user) | Q(collector=user)
+            )
+        else:
+            # Pour les particuliers et autres types
+            return WasteDeclaration.objects.filter(user=user)
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
     def assign_collector(self, request, pk=None):
